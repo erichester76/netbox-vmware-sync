@@ -1,0 +1,21 @@
+services:
+  vmware-sync:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: vmware-sync:latest
+    env_file: .env
+    volumes:
+      - ./vcenters.txt:/app/vcenters.txt
+      - ./regex:/app/regex
+    networks:
+      - o11y
+    environment:
+      - PYTHONUNBUFFERED=1
+      #- https_proxy=http://proxy.app.clemson.edu:8080
+      #- no_proxy=o11y.app.clemson.edu
+    restart: unless-stopped
+
+networks:
+  o11y:
+    external: true

@@ -1,0 +1,6 @@
+(?i)^CU-.+,Clemson University Information Technology Center
+(?i)^CUDR-.+|^DR-.+,University of California San Diego
+(?i)^Poole-.+,Poole Agricultural Center
+(?i)^Proto-.+,Clemson University Information Technology Center
+(?i)^OISP-.+,Clemson University Information Technology Center
+.*\-.*,Unknown

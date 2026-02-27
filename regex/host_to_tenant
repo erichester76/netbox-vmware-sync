@@ -1,0 +1,7 @@
+.*\-gen\-.*,Genetec
+.*\-len\-.*,VMware Infrastructure
+.*\-core\-.*,VMware Infrastructure
+.*\-boot\-.*,VMware Infrastructure
+.*\-vdi\-.*,VDI Infrastructure
+.*\-oisp\-.*,Security Infrastructure
+.*\-.*,Unknown

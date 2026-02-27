@@ -1,0 +1,128 @@
+^4gk-2fa.+,2-Factor Authentication
+^86v-rsy.+,Athletics
+^4gj-bam.+,Atlassian Premise Servers
+^4gj-atl.+,Atlassian Premise Servers
+^4gk-aie.+,Automation Infrastructure Engineering
+^4gk-azr.+,Azure Infrastructure
+^4gk-bld.+,Build Host
+^4gi-chw.+,Cherwell ITSM System
+^4gn-cmx.+,Cisco Call Manager
+^ucm-.+,Cisco Call Manager
+^4gm-ccm.+,Cisco Call Manager
+^4gn-ise.+,Cisco Identity Services Engine (ISE)
+cisco-ise.*,Cisco Identity Services Engine (ISE)
+^cisco-ndfc.*,Network Infrastructure
+^4gi-cms.+,Cisco Meeting Server
+^.*ctx-.+,VDI Infrastructure
+^4gk-c19.+,Covid19 Apps
+^4gm-soc.+,CSOC Operations
+^4gj-cbs.+,CUBS
+^4gk-cwp.+,Customer Work Portal
+^4gk-dcm.+,Data Center Management
+^4gk-dcp.+,Data Center Printing
+^4gk-dkr.+,Docker 
+^4gj-erp.+,ERP Systems
+^4gj-esa.+,ESA Applications
+^4gk-exg.+,Premise Exchange Servers
+^.*-EXG-.+,Premise Exchange Servers
+^4gk-cis.+,General Core Infrastructure Servers
+^4gk-gen.+,General Purpose
+^5jf-gtc.+,Genetec
+^4gk-gfs.+,Gluster
+^4gk-hbr.+,Harbor 
+^6mz-nps.+,HR 
+^6mz-trn.+,HR Training
+^4gk-hyt.+,HyTrust
+^.*idp-.+,Identity Management
+^.*idm-.+,Identity Management
+^4gj-ins.+,Insight
+^.*-inf.+,Internal ISO projects
+^4gk-tst.+,ITIO Test
+^4gi-jmf.+,JAMF
+^4gi-lab.+,Lab Systems
+^4gk-www.+,Main Clemson Website
+^4gk-mpm.+,Matt Morrison
+^4gk-maz.+,Migrate Azure
+^4gj-mob.+,Mobile Infrastructure
+^4gk-mon.+,Monitoring - Spectrum Replacement
+^4gk-nxc.+,NextCloud
+^4gj-oir.+,OIR (Office of Institutional Research)
+^4gk-ol9.+,OL9 Testing
+^4gk-oem.+,Oracle Enterprise Manager
+^4gm-pan.+,Panorama
+^4gi-ppc.+,Papercut
+^4gk-pkg.+,Patching Servers
+^.*pfs-.+,PeopleSoft Finance
+^.*phr-.+,PeopleSoft HR
+^4gk-pma.+,PHPMyAdmin
+^4gj-psa.+,Public Service and Agriculture
+^4gh-sfc.+,Salesforce
+^4gi-scm.+,SCCM
+^sccm.+,SCCM
+^4gm-sec.+,Security Infrastructure
+^4gi-sno.+,ServiceNOW
+^4gi-mid.+,ServiceNOW
+^5jc-nps.+,SLA 6613 - Campus Reservations and Events EMS Server
+^6xp-ied.+,SLA 6619 - InfoEd Server Hosting and DBA Services
+^72n-pme.+,SLA 6654 - Facilities ProLogic Server 
+^6uu-bkb.+,SLA 6669 - CU Foundation Hosting
+^2uo-nps.+,SLA 6671 - Computer Science Olympiad Server
+^75o-aim.+,SLA 6695 - Facilities Servers and Storage
+^6yn-nps.+,SLA 6739 - Creative Inquiry Hosting
+^4mb-nps.+,SLA 6740 - University Library Server
+^6d7-nps.+,SLA 6761 - General Counsel Server
+^4gt-tab.+,SLA 6762 - Tableau Server for Finance and Operations
+^2th-nps.+,SLA 6767 - CU Restoration Institute Hunley Server
+^4gj-edw.+,SLA 6770 - Business Object System
+^259-nps.+,SLA 6773 - public Service and Agriculture (PSA) Services Hosting and Telecomm
+^6m6-aim.+,SLA 6788 - Facilities Database Server
+^5i3-alr.+,SLA 6790 - Emergency Services AlertUs Server
+^72n-fac.+,SLA 6821 - Facilities Bastion Server
+^4gj-sis.+,SLA 6827 - Banner SIS Hosting
+^6nt-tzl.+,SLA 6828 - TZ Locker Servers and DBA
+^4gt-nps.+,SLA 6829 - Clemson Analytics Team Utility Server
+^27q-nps.+,SLA 6836 - Regulatory Services REGFOCUS Server
+^cu-zfs.+,SLA 6840 - Grid Modeling Storage
+^5i3-cop.+,SLA 6841 - Emergency Operations Center Hosting and DBA
+^75o-tzl.+,SLA 6842 - Facilities TZ Locker Server & DBA Services
+^72n-tfw.+,SLA 6843 - Trafficware Advanced Transportation System
+^2ba-grd.+,SLA 6844 - Biological Sciences Guardian Server
+^2bx-nps.+,SLA 6845 - National Bobwhite Conservation Hosting and DBA Services
+^cbs-p-f.+,SLA 6846 - Budgets and Financial Workday Server Hosting
+^75q-key.+,SLA 6848 - Facilities Key Systems GFMS Server
+^6xw-wdg.+,SLA 6849 - Office of Animal Resources WatchDog Server
+^.*rdf.+,SLA 6850 - Redfern Servers and DBA Support
+^.*RDF.+,SLA 6850 - Redfern Servers and DBA Support
+^2up-nps.+,SLA 6852 - MTHSC Server Hosting
+^crh-imp.+,SLA 6853 - Rural Health's 2FA appliances
+^86v-edw.+,SLA 6854 - Athletics Database Servers
+^5jf-tg1.+,SLA 6857 - TigerOne Point of Sale Server
+^774-arc.+,SLA 6858 - FMO ArcGIS and DB Servers
+^2ul-nps.+,SLA 6860 - Materials Science and Engineering DB Server
+^2bp-nps.+,SLA 6861 - Sonoco Institute Server & Storage
+^6mb-erp.+,SLA 6863 - Enterprise Resource Planning Servers & Storage
+^72n-cev.+,SLA 6868 - Campus Utilities CEVAC Servers
+^2nx-cdc.+,SLA 6869 - CDC Project Server
+^2t4-cds.+,SLA 6870 - Cross-Dock-Scheduling Project Server
+^6nt-onb.+,SLA 6872 - Workday OnBase Servers & DBA Services
+^4gj-acq.+,SLA 6874 - AccelQ Automation Testing Platform Server
+^.*-swd.+,SolarWinds
+^4gk-spw.+,Spacewalk
+^.+spl.+,Splunk
+^4gm-stw.+,StealthWatch
+^4gi-stv.+,Streaming Video (Ensemble and Wowza)
+^4gj-sun.+,Sunapsis
+^4gm-ten.+,Tenable
+^4gj-uc4.+,UC4
+^4gk-uc4.+,UC4
+^4gk-upg.+,Upgrade
+^4gk-utl.+,Utility
+^75o-uea.+,Utility Energy Analytics (FMO)
+^4gi-vdi.+,VDI Infrastructure
+^4gk-vem.+,Veeam Backup Infrastructure
+^6yn-vya.+,VIYA SAS (Watt Center)
+^4gk-vmw.+,VMware Infrastructure
+^.*-zrt.+,Zerto Infrastructure
+^4gk-zfs.+,ZFS Storage Project
+^4gm-.*,Security Infrastructure
+^6gn-zom.+,Zoom

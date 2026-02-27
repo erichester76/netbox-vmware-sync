@@ -1,0 +1,6 @@
+pynetbox==7.3.3
+pyvmomi==8.0.3.0.1
+requests==2.32.3
+deepdiff==8.0.1
+pyyaml==6.0.2
+netboxlabs-diode-sdk @ git+https://github.com/netboxlabs/diode-sdk-python.git@release
