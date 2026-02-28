@@ -8,6 +8,7 @@ services:
     volumes:
       - ./vcenters.txt:/app/vcenters.txt
       - ./regex:/app/regex
+      - ./vmware-sync.py:/app/vmware-sync.py
     networks:
       - o11y
     environment:

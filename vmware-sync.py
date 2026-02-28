@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
+import datetime
 import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import csv
+import os
 import threading
 import pynetbox
 from pynetbox.core.response import Record
-import deepdiff
 from pyVmomi import vim
 from pyVim.connect import SmartConnect, Disconnect
 import urllib3
@@ -295,7 +295,7 @@ def create_or_update(object_type, find_function, create_function, update_functio
             logger.error(f"key_field for {object_type} '{key_fields[0]}' has no value {data}")
             return None
         get_params = {}
-        logger.info(f"key fields: {key_fields} out of {data}")
+        logger.debug(f"key fields: {key_fields} out of {data}")
         for key_field in key_fields:
             value = data[key_field]
             if isinstance(value, int) and key_field != 'id' and key_field != 'vid':
@@ -360,7 +360,9 @@ def create_or_update(object_type, find_function, create_function, update_functio
 
             return existing_id
 
-        data['slug'] = re.sub(r'\W+', '-', data[key_fields[0]].lower())
+        # Use 'name' for slug if available and is a string, else fallback to first key as string
+        slug_source = data.get('name') if isinstance(data.get('name'), str) else str(data[key_fields[0]])
+        data['slug'] = re.sub(r'\W+', '-', slug_source.lower())
         data = sanitize_data(data)
         # Fix: Ensure 'size' is an integer for virtualdisk
         if object_type == 'virtualdisk' and 'size' in data:
@@ -976,7 +978,7 @@ def process_vmware_data(vcenter, username, password, netbox_url, netbox_token, r
             logger.error(f"Error disconnecting from vCenter {vcenter}: {e}")
 
 
-def mark_decommissioned_vms(nb, vcenter_vms, netbox_url, netbox_token):
+def mark_decommissioned_vms(nb, vcenter_vms):
     """
     Mark VMs in NetBox that are not in vCenter with status 'decommissioning', skipping those already marked.
     """
@@ -987,12 +989,20 @@ def mark_decommissioned_vms(nb, vcenter_vms, netbox_url, netbox_token):
         logger.error("No vCenter VM data provided")
         return
 
-    valid_clusters = [cluster for cluster in vcenter_vms if cluster is not None and isinstance(cluster, list)]
-    if not valid_clusters:
+
+    # Flatten all clusters from all vCenters into a single list
+    flat_clusters = []
+    for entry in vcenter_vms:
+        if isinstance(entry, list):
+            flat_clusters.extend(entry)
+        elif isinstance(entry, dict):
+            flat_clusters.append(entry)
+
+    if not flat_clusters:
         logger.error("No valid cluster data found in vCenter VMs")
         return
 
-    logger.debug(f"Processing {len(valid_clusters)} valid cluster(s) from vCenter")
+    logger.debug(f"Processing {len(flat_clusters)} clusters from all vCenters")
 
     # Get all VMs in NetBox with the VMWare-Sync tag, excluding those already decommissioning
     try:
@@ -1003,13 +1013,45 @@ def mark_decommissioned_vms(nb, vcenter_vms, netbox_url, netbox_token):
 
     # Create a set of VM names from vCenter for comparison
     try:
-        vcenter_vm_names = {
-            vm['vm'].name.replace('.clemson.edu', '')[:64]
-            for cluster in valid_clusters
-            for host in cluster.get('hosts', [])
-            for vm in host.get('vms', [])
-            if vm and isinstance(vm, dict) and 'vm' in vm and vm['vm'] and hasattr(vm['vm'], 'name')
-        }
+        vcenter_vm_names = set()
+        for cluster in flat_clusters:
+            for host in cluster.get('hosts', []):
+                for vm in host.get('vms', []):
+                    try:
+                        # Try to access VM name, re-authenticate if NotAuthenticated
+                        name = None
+                        if vm and isinstance(vm, dict) and 'vm' in vm and vm['vm']:
+                            try:
+                                name = vm['vm'].name.replace('.clemson.edu', '')[:64]
+                            except Exception as ve:
+                                if 'NotAuthenticated' in str(ve):
+                                    logger.warning("VM object not authenticated, attempting to re-authenticate vCenter session...")
+                                    # Re-authenticate vCenter session (assumes global credentials and vcenter hostname available)
+                                    # You may need to pass these as arguments or use ENV
+                                    vcenter = getattr(vm['vm'], 'server', None)
+                                    username = os.environ.get("VCENTER_USERNAME")
+                                    password = os.environ.get("VCENTER_PASSWORD")
+                                    if vcenter and username and password:
+                                        try:
+                                            from pyVim.connect import SmartConnect
+                                            api_client = SmartConnect(host=vcenter, user=username, pwd=password, sslContext=ssl_context)
+                                            # Try to refresh the VM object
+                                            name = vm['vm'].name.replace('.clemson.edu', '')[:64]
+                                            logger.info(f"Re-authenticated and accessed VM name: {name}")
+                                        except Exception as reauth_e:
+                                            logger.error(f"Failed to re-authenticate vCenter {vcenter}: {reauth_e}")
+                                            continue
+                                    else:
+                                        logger.error("Missing vCenter info or credentials for re-authentication.")
+                                        continue
+                                else:
+                                    logger.error(f"Error accessing VM name: {ve}")
+                                    continue
+                        if name:
+                            vcenter_vm_names.add(name)
+                    except Exception as inner_e:
+                        logger.error(f"Error processing VM in cluster: {inner_e}")
+                        continue
         logger.debug(f"Found {len(vcenter_vm_names)} VM names in vCenter")
     except Exception as e:
         logger.error(f"Error processing vCenter VM names: {e}")
@@ -1046,7 +1088,7 @@ def mark_decommissioned_vms(nb, vcenter_vms, netbox_url, netbox_token):
             logger.debug(f"VM {vm_name} found in vCenter; no decommissioning needed")
 
 
-def delete_stale_decommissioned_vms(nb):
+def delete_stale_decommissioned_vms(nb, decom_days):
     """
     Delete VMs with status 'decommissioning' that haven't been modified in 5 days.
     """
@@ -1059,7 +1101,7 @@ def delete_stale_decommissioned_vms(nb):
         logger.error(f"Error fetching decommissioning VMs: {e}")
         return
 
-    cutoff_date = datetime.now().astimezone() - timedelta(days=5)
+    cutoff_date = datetime.now().astimezone() - datetime.timedelta(days=decom_days)
 
     for vm in decom_vms:
         last_updated = vm.last_updated
@@ -1097,58 +1139,63 @@ def delete_stale_decommissioned_vms(nb):
 
 
 def main():
+    # Read vcenters.txt as a list of vcenter hostnames (one per line, skip blanks/comments)
     with open("vcenters.txt", "r") as f:
-        reader = csv.reader(f)
+        vcenters = [line.strip() for line in f if line.strip() and not line.strip().startswith('#')]
 
-        all_cluster_data = []
-        netbox_url = None
-        netbox_token = None
+    all_cluster_data = []
+    # Load credentials and URLs from environment variables
+    username = os.environ.get("VCENTER_USERNAME")
+    password = os.environ.get("VCENTER_PASSWORD")
+    netbox_url = os.environ.get("NETBOX_URL")
+    netbox_token = os.environ.get("NETBOX_TOKEN")
+    decom_days = os.environ.get("DECOM_DAYS", 5)
 
-        for row in reader:
-            if len(row) != 5:
-                logger.error(f"Invalid row in vcenters file: {row}")
-                continue
+    if not (username and password and netbox_url and netbox_token):
+        logger.error("Missing required environment variables for credentials or NetBox connection.")
+        return
 
-            vcenter, username, password, netbox_url, netbox_token = row
-            logger.info(f"Processing vCenter: {vcenter}")
-            session = RelativeSession(f'https://{vcenter}')
-            session.headers.update({"Content-Type": "application/json"})
-            login_url = f"/rest/com/vmware/cis/session"
-            try:
-                response = session.post(login_url, auth=(username, password))
-                response.raise_for_status()
-                logger.debug(f"Authenticated with vCenter {vcenter}")
-            except Exception as e:
-                logger.error(f"Failed to authenticate with vCenter {vcenter}: {e}")
-                logger.error("Traceback details:")
-                logger.error(traceback.format_exc())
-                continue
+    for vcenter in vcenters:
+        logger.info(f"Processing vCenter: {vcenter}")
+        session = RelativeSession(f'https://{vcenter}')
+        session.headers.update({"Content-Type": "application/json"})
+        login_url = f"/rest/com/vmware/cis/session"
+        try:
+            response = session.post(login_url, auth=(username, password))
+            response.raise_for_status()
+            logger.debug(f"Authenticated with vCenter {vcenter}")
+        except Exception as e:
+            logger.error(f"Failed to authenticate with vCenter {vcenter}: {e}")
+            logger.error("Traceback details:")
+            logger.error(traceback.format_exc())
+            continue
 
-            # Process vCenters sequentially to isolate threading issues
-            try:
-                cluster_data = process_vmware_data(vcenter, username, password, netbox_url, netbox_token, session)
-                if cluster_data and isinstance(cluster_data, list):
-                    all_cluster_data.append(cluster_data)
-                    logger.info(f"Successfully retrieved cluster data with {len(cluster_data)} cluster(s) from vCenter {vcenter}")
-                else:
-                    logger.warning(f"Invalid or empty cluster data returned from vCenter {vcenter}: {cluster_data}")
-            except Exception as e:
-                logger.error(f"Error processing vCenter {vcenter}: {e}")
-                logger.error("Traceback details:")
-                logger.error(traceback.format_exc())
+        # Process vCenters sequentially to isolate threading issues
+        try:
+            cluster_data = process_vmware_data(vcenter, username, password, netbox_url, netbox_token, session)
+            logger.info(f"Type of cluster_data: {type(cluster_data)}; Contents: {repr(cluster_data)[:500]}")
+            if cluster_data and isinstance(cluster_data, list):
+                all_cluster_data.append(cluster_data)
+                logger.info(f"Successfully retrieved cluster data with {len(cluster_data)} cluster(s) from vCenter {vcenter}")
+            else:
+                logger.warning(f"Invalid or empty cluster data returned from vCenter {vcenter}: {cluster_data}")
+        except Exception as e:
+            logger.error(f"Error processing vCenter {vcenter}: {e}")
+            logger.error("Traceback details:")
+            logger.error(traceback.format_exc())
 
-        # After syncing all vCenters, mark and delete decommissioned VMs
-        if not all_cluster_data:
-            logger.error("No valid vCenter data retrieved; skipping decommissioning and deletion")
-            return
+    # After syncing all vCenters, mark and delete decommissioned VMs
+    if not all_cluster_data:
+        logger.error("No valid vCenter data retrieved; skipping decommissioning and deletion")
+        return
 
-        logger.info(f"Collected data from {len(all_cluster_data)} vCenter(s)")
-        nb = pynetbox.api(netbox_url, token=netbox_token)
-        nb.http_session.verify = False
-        nb.http_session.headers.update({"User-Agent": "netbox-vcenter-sync/0.0.1"})
+    logger.info(f"Collected data from {len(all_cluster_data)} vCenter(s)")
+    nb = pynetbox.api(netbox_url, token=netbox_token)
+    nb.http_session.verify = False
+    nb.http_session.headers.update({"User-Agent": "netbox-vcenter-sync/0.0.1"})
 
-        mark_decommissioned_vms(nb, all_cluster_data, netbox_url, netbox_token)
-        delete_stale_decommissioned_vms(nb)
+    mark_decommissioned_vms(nb, all_cluster_data)
+    delete_stale_decommissioned_vms(nb, decom_days)
 
 if __name__ == "__main__":
     main()
