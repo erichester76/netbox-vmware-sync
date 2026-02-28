@@ -1,3 +1,4 @@
 .env
 data_transfer.log
 vcenters.txt
+regex/*
