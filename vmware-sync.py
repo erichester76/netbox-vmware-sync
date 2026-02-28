@@ -295,10 +295,10 @@ def create_or_update(object_type, find_function, create_function, update_functio
             logger.error(f"key_field for {object_type} '{key_fields[0]}' has no value {data}")
             return None
         get_params = {}
-        logger.debug(f"key fields: {key_fields} out of {data}")
+        logger.info(f"key fields: {key_fields} out of {data}")
         for key_field in key_fields:
             value = data[key_field]
-            if isinstance(value, int) and 'id' not in key_field:
+            if isinstance(value, int) and key_field != 'id' and key_field != 'vid':
                 key_field = f"{key_field}_id"
             get_params[key_field] = value
             logger.debug(f"keyfield: {key_field} {value}")
@@ -311,21 +311,12 @@ def create_or_update(object_type, find_function, create_function, update_functio
                 response = object_cache[cache_key]
             else:
                 logger.debug(f"CACHE: Cache miss for object: {cache_key} {data[list(data.keys())[0]]}")
-                if object_type == 'vlan':
-                    results = list(find_function(**get_params))
-                    if len(results) > 1:
-                        logger.warning(f"Multiple {object_type} found for params {get_params}: {len(results)} results. Selecting first.")
-                        response = results[0]
-                    elif len(results) == 1:
-                        response = results[0]
-                    else:
-                        response = None
-                else:
-                    try:
-                        response = find_function(**get_params)
-                    except ValueError as e:
-                        logger.error(f"Error querying {object_type} with params {get_params}: {e}")
-                        response = None
+                
+            try:
+                response = find_function(**get_params)
+            except ValueError as e:
+                logger.error(f"Error querying {object_type} with params {get_params}: {e}")
+                response = None
 
         if response:
             existing_id = response.id if hasattr(response, 'id') else response['id']
@@ -347,6 +338,12 @@ def create_or_update(object_type, find_function, create_function, update_functio
                         update_data[field] = existing_data[field]
                         logger.debug(f"Preserving NetBox value for {field} ({existing_data[field]}) for {object_type} {data.get('name')}")
 
+            if object_type == 'virtualdisk' and 'size' in update_data:
+                try:
+                    update_data['size'] = int(update_data['size'])
+                except Exception as e:
+                    logger.error(f"Failed to convert size to int for virtualdisk: {update_data['size']} ({e})")
+
             diff = DeepDiff(existing_data, update_data, ignore_order=True, ignore_string_case=True, report_repetition=True, ignore_type_in_groups=[(int, str, float)])
 
             if diff:
@@ -365,6 +362,12 @@ def create_or_update(object_type, find_function, create_function, update_functio
 
         data['slug'] = re.sub(r'\W+', '-', data[key_fields[0]].lower())
         data = sanitize_data(data)
+        # Fix: Ensure 'size' is an integer for virtualdisk
+        if object_type == 'virtualdisk' and 'size' in data:
+            try:
+                data['size'] = int(data['size'])
+            except Exception as e:
+                logger.error(f"Failed to convert size to int for virtualdisk: {data['size']} ({e})")
         logger.info(f"Creating new object: {data[list(data.keys())[0]]}")
         try:
             new_object = create_function(data)
