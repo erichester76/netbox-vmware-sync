@@ -18,8 +18,8 @@ COPY requirements.txt .
 RUN export https_proxy=http://proxy.app.clemson.edu:8080 &&  pip install --no-cache-dir -r requirements.txt
 
 # Copy the script and ensure it's executable
-COPY vmware-sync.py .
-RUN chmod +x vmware-sync.py
+COPY *.py .
+RUN chmod +x *.py
 
 # Create directory for regex files
 RUN mkdir regex
