@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """
 VMware vCenter → NetBox Synchronization Script using pynetbox2
@@ -34,8 +35,12 @@ VLAN_CACHE_LOCK = threading.Lock()
 HOST_AUTOSTART_CACHE = {}
 HOST_AUTOSTART_CACHE_LOCK = threading.Lock()
 
+# Set logging level from DEBUG environment variable
+DEBUG_ENV = os.environ.get("DEBUG", "false").lower()
+LOG_LEVEL = logging.DEBUG if DEBUG_ENV in ("true", "1", "yes", "on") else logging.INFO
+
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=LOG_LEVEL,
     format='%(asctime)s [%(threadName)s] [%(levelname)s] [%(funcName)s] %(message)s',
     handlers=[logging.StreamHandler()]
 )
